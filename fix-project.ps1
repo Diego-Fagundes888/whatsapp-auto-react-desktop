@@ -28,7 +28,7 @@ $packageContent = @'
   "name": "whatsapp-auto-react-desktop",
   "version": "1.0.0",
   "description": "WhatsApp Auto React Desktop Application",
-  "main": "src/main.js",
+  "main": "main.js",
   "scripts": {
     "start": "electron .",
     "dist": "electron-builder",
