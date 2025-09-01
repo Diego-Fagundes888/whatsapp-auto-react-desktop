@@ -1,8 +1,8 @@
-﻿{
+{
   "name": "whatsapp-auto-react-desktop",
   "version": "1.0.0",
   "description": "WhatsApp Auto React Desktop Application",
-  "main": "main.js",
+  "main": "src/main.js",
   "scripts": {
     "start": "electron .",
     "dist": "electron-builder",
