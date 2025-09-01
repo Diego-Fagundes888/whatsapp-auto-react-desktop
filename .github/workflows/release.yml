@@ -1,57 +1,58 @@
-name: Build & Release (Windows)
+name: Build & Release
 
 on:
   push:
     tags:
-      - 'v*'   # dispara quando você criar uma tag do tipo v1.0.0
+      - 'v*' # dispara quando criar tags tipo v1.0.0, v1.0.1 etc.
 
 jobs:
-  build_windows:
+  build-windows:
     runs-on: windows-latest
 
     steps:
-      # 1. Baixar o código
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      # 2. Configurar Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: 18
 
-      # 3. Instalar dependências
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
-      # 4. Build do app com electron-builder
-      - name: Build app
+      # Prepara o certificado se o secret CSC_LINK estiver presente
+      - name: Prepare Windows signing certificate (if provided)
+        if: ${{ secrets.CSC_LINK != '' }}
+        shell: pwsh
+        run: |
+          Write-Host "Decoding certificate..."
+          $certBase64 = "${{ secrets.CSC_LINK }}"
+          [IO.File]::WriteAllBytes("$env:GITHUB_WORKSPACE\\certificate.p12", [Convert]::FromBase64String($certBase64))
+          Write-Host "Certificate written to: $env:GITHUB_WORKSPACE\\certificate.p12"
+
+      - name: Build app (Windows)
         run: npm run dist
         env:
-          CSC_LINK: ${{ secrets.CSC_LINK || '' }}
+          CSC_LINK: ${{ github.workspace }}\\certificate.p12
+          WIN_CSC_LINK: ${{ github.workspace }}\\certificate.p12
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD || '' }}
 
-      # 5. Criar release no GitHub
-      - name: Create Release
-        id: create_release
-        uses: ncipollo/release-action@v1
-        with:
-          tag: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
-          body: |
-            🚀 Release gerada automaticamente pelo GitHub Actions
-            - Commit: ${{ github.sha }}
-            - Runner: windows-latest
+      - name: Cleanup certificate
+        if: ${{ secrets.CSC_LINK != '' }}
+        shell: pwsh
+        run: |
+          if (Test-Path "$env:GITHUB_WORKSPACE\\certificate.p12") {
+            Remove-Item -Force "$env:GITHUB_WORKSPACE\\certificate.p12"
+            Write-Host "Certificate cleaned up."
+          }
 
-      # 6. Fazer upload dos builds (exe/zip)
-      - name: Upload release assets
+      - name: Upload artifacts to Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            dist/**/*.exe
-            dist/**/*.zip
+            dist/*.exe
+            dist/*.zip
+            dist/*.msi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
