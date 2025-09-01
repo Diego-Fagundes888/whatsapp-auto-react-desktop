@@ -45,13 +45,15 @@
       "icon": "assets/icon.ico",
       "signAndEditExecutable": false,
       "sign": false,
-      "publisherName": "Diego Test Build"
+      "publisherName": "Diego Test Build",
+      "verifyUpdateCodeSignature": false
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "signing": false
     },
     "mac": {
       "target": [
