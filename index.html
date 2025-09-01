@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Auto React Bot</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary-green: #25D366;
+            --dark-green: #128C7E;
+            --light-green: #dcf8c6;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --shadow-light: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --shadow-heavy: 0 20px 60px rgba(0, 0, 0, 0.15);
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --success: #48bb78;
+            --warning: #ed8936;
+            --error: #f56565;
+            --border-radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: var(--shadow-heavy);
+            overflow: hidden;
+            width: 100%;
+            max-width: 1200px;
+            min-height: 700px;
+            position: relative;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-green), var(--dark-green));
+            z-index: 1;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--dark-green) 100%);
+            color: white;
+            padding: 32px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .status-section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-light);
+            position: relative;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .status-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: 12px;
+            background: var(--error);
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .status-dot::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            top: 0;
+            left: 0;
+            animation: pulse 2s infinite;
+            opacity: 0;
+            background: inherit;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.7; }
+            70% { transform: scale(2); opacity: 0; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+
+        .status-dot.connected {
+            background: var(--success);
+        }
+
+        .status-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .controls {
+            display: flex;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.1);
+            transition: var(--transition);
+        }
+
+        .btn:hover::before {
+            left: 0;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--dark-green) 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(37, 211, 102, 0.3);
+        }
+
+        .btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(37, 211, 102, 0.4);
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, var(--error) 0%, #e53e3e 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(245, 101, 101, 0.3);
+        }
+
+        .btn-stop:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(245, 101, 101, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .stats-section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-light);
+        }
+
+        .stats-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stats-header h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary-green);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-green);
+            margin-bottom: 5px;
+            line-height: 1;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .qr-section {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin: 30px 0;
+            display: none;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-light);
+        }
+
+        .qr-section.show {
+            display: block;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .qr-section h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+        }
+
+        .qr-instructions {
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .qr-code {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            display: inline-block;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .qr-image {
+            max-width: 280px;
+            max-height: 280px;
+            border-radius: 8px;
+        }
+
+        .loading {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin: 30px 0;
+            display: none;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-light);
+        }
+
+        .loading.show {
+            display: block;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .spinner {
+            border: 4px solid rgba(37, 211, 102, 0.1);
+            border-top: 4px solid var(--primary-green);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .logs-section {
+            grid-column: 1 / -1;
+            background: rgba(26, 32, 44, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: var(--shadow-light);
+            margin-top: 30px;
+        }
+
+        .logs-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .logs-title {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logs-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .log-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .log-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .logs {
+            background: rgba(0, 0, 0, 0.3);
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+            font-size: 13px;
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+        }
+
+        .logs::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .logs::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+        }
+
+        .logs::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+        }
+
+        .logs::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.5);
+        }
+
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 6px 0;
+            line-height: 1.4;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            border-left: 2px solid transparent;
+            padding-left: 10px;
+            transition: var(--transition);
+        }
+
+        .log-entry:hover {
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+        }
+
+        .log-icon {
+            min-width: 16px;
+            height: 16px;
+            margin-top: 1px;
+        }
+
+        .log-content {
+            flex: 1;
+        }
+
+        .log-timestamp {
+            color: #a0aec0;
+            font-weight: 500;
+        }
+
+        .log-success {
+            color: #68d391;
+            border-left-color: #68d391;
+        }
+
+        .log-error {
+            color: #fc8181;
+            border-left-color: #fc8181;
+        }
+
+        .log-warning {
+            color: #f6ad55;
+            border-left-color: #f6ad55;
+        }
+
+        .log-info {
+            color: #63b3ed;
+            border-left-color: #63b3ed;
+        }
+
+        .performance-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px 15px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .performance-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 16px;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="performance-indicator">
+            <div class="performance-dot"></div>
+            <span>Sistema Ativo</span>
+        </div>
+        
+        <div class="header">
+            <div class="header-content">
+                <h1>🤖 WhatsApp Auto React Bot</h1>
+                <p>Sistema Inteligente de Reações Automáticas para Grupos</p>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="grid">
+                <div class="status-section">
+                    <div class="status-indicator">
+                        <div class="status-dot" id="statusDot"></div>
+                        <span class="status-text" id="statusText">Sistema Desconectado</span>
+                    </div>
+                    <div class="controls">
+                        <button class="btn btn-start" id="startBtn">
+                            🚀 <span>Iniciar Sistema</span>
+                        </button>
+                        <button class="btn btn-stop" id="stopBtn" disabled>
+                            ⏹️ <span>Parar Sistema</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="stats-section">
+                    <div class="stats-header">
+                        <h3>📊 Estatísticas em Tempo Real</h3>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">⚡</div>
+                            <div class="stat-value" id="reactionsCount">0</div>
+                            <div class="stat-label">Reações/min</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🎯</div>
+                            <div class="stat-value" id="maxReactions">150</div>
+                            <div class="stat-label">Limite/min</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">👥</div>
+                            <div class="stat-value" id="groupsCount">0</div>
+                            <div class="stat-label">Grupos Ativos</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🔄</div>
+                            <div class="stat-value" id="processedMessages">0</div>
+                            <div class="stat-label">Msg Cache</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="loading" id="loadingSection">
+                    <div class="spinner"></div>
+                    <p>Inicializando Sistema WhatsApp Web...</p>
+                </div>
+
+                <div class="qr-section" id="qrSection">
+                    <h3>📱 Autenticação Requerida</h3>
+                    <div class="qr-instructions">
+                        <strong>Como conectar:</strong><br>
+                        1. Abra o WhatsApp no seu celular<br>
+                        2. Toque em Menu (⋮) → WhatsApp Web<br>
+                        3. Escaneie o código QR abaixo
+                    </div>
+                    <div class="qr-code">
+                        <img id="qrImage" class="qr-image" alt="QR Code" style="display: none;" />
+                        <div id="qrText" style="font-family: monospace; font-size: 12px; display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="logs-section">
+                    <div class="logs-header">
+                        <div class="logs-title">
+                            🔍 <span>Console do Sistema</span>
+                        </div>
+                        <div class="logs-controls">
+                            <button class="log-btn" onclick="clearLogs()">Limpar</button>
+                            <button class="log-btn" onclick="exportLogs()">Exportar</button>
+                        </div>
+                    </div>
+                    <div class="logs" id="logs">
+                        <div class="log-entry log-info">
+                            <span class="log-icon">ℹ️</span>
+                            <div class="log-content">
+                                <span class="log-timestamp">[00:00:00]</span> 
+                                <span>Sistema carregado com sucesso. Aguardando inicialização...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isConnected = false;
+        let logCount = 0;
+
+        const elements = {
+            statusDot: document.getElementById('statusDot'),
+            statusText: document.getElementById('statusText'),
+            startBtn: document.getElementById('startBtn'),
+            stopBtn: document.getElementById('stopBtn'),
+            loadingSection: document.getElementById('loadingSection'),
+            qrSection: document.getElementById('qrSection'),
+            qrImage: document.getElementById('qrImage'),
+            qrText: document.getElementById('qrText'),
+            logs: document.getElementById('logs'),
+            reactionsCount: document.getElementById('reactionsCount'),
+            maxReactions: document.getElementById('maxReactions'),
+            groupsCount: document.getElementById('groupsCount'),
+            processedMessages: document.getElementById('processedMessages')
+        };
+
+        function getLogIcon(type) {
+            const icons = {
+                'success': '✅',
+                'error': '❌',
+                'warning': '⚠️',
+                'info': 'ℹ️'
+            };
+            return icons[type] || 'ℹ️';
+        }
+
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.innerHTML = `
+                <span class="log-icon">${getLogIcon(type)}</span>
+                <div class="log-content">
+                    <span class="log-timestamp">[${timestamp}]</span> 
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            elements.logs.appendChild(logEntry);
+            elements.logs.scrollTop = elements.logs.scrollHeight;
+            
+            // Animação de entrada
+            logEntry.style.opacity = '0';
+            logEntry.style.transform = 'translateX(-20px)';
+            requestAnimationFrame(() => {
+                logEntry.style.transition = 'all 0.3s ease-out';
+                logEntry.style.opacity = '1';
+                logEntry.style.transform = 'translateX(0)';
+            });
+            
+            logCount++;
+            
+            // Remove logs antigos (manter apenas os últimos 100)
+            const entries = elements.logs.querySelectorAll('.log-entry');
+            if (entries.length > 100) {
+                entries[0].remove();
+                logCount--;
+            }
+        }
+
+        function updateStatus(status, connected = false) {
+            elements.statusText.textContent = status;
+            elements.statusDot.classList.toggle('connected', connected);
+            isConnected = connected;
+            
+            elements.startBtn.disabled = connected;
+            elements.stopBtn.disabled = !connected;
+
+            // Animação do texto de status
+            elements.statusText.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                elements.statusText.style.transform = 'scale(1)';
+            }, 150);
+        }
+
+        function updateStats() {
+            if (isConnected) {
+                window.electronAPI.getStats().then(stats => {
+                    animateStatValue(elements.reactionsCount, stats.reactionsInWindow);
+                    animateStatValue(elements.maxReactions, stats.maxReactionsPerMinute);
+                    animateStatValue(elements.groupsCount, stats.processedGroupsCount);
+                    animateStatValue(elements.processedMessages, stats.cachedMessages || 0);
+                });
+            }
+        }
+
+        function animateStatValue(element, newValue) {
+            const currentValue = parseInt(element.textContent) || 0;
+            if (currentValue !== newValue) {
+                element.style.transform = 'scale(1.1)';
+                element.textContent = newValue;
+                setTimeout(() => {
+                    element.style.transform = 'scale(1)';
+                }, 200);
+            }
+        }
+
+        function clearLogs() {
+            elements.logs.innerHTML = '';
+            logCount = 0;
+            addLog('Console limpo pelo usuário', 'info');
+        }
+
+        function exportLogs() {
+            const logs = Array.from(elements.logs.querySelectorAll('.log-entry')).map(entry => {
+                const timestamp = entry.querySelector('.log-timestamp').textContent;
+                const message = entry.querySelector('.log-content span:last-child').textContent;
+                return `${timestamp} ${message}`;
+            }).join('\n');
+            
+            const blob = new Blob([logs], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `whatsapp-bot-logs-${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            addLog('Logs exportados com sucesso', 'success');
+        }
+
+        // Event Listeners
+        elements.startBtn.addEventListener('click', async () => {
+            elements.loadingSection.classList.add('show');
+            elements.qrSection.classList.remove('show');
+            updateStatus('Inicializando sistema...', false);
+            addLog('🚀 Iniciando sistema de reações automáticas...', 'info');
+            
+            try {
+                const result = await window.electronAPI.startBot();
+                if (!result.success) {
+                    throw new Error(result.error);
+                }
+            } catch (error) {
+                addLog(`Erro crítico na inicialização: ${error.message}`, 'error');
+                elements.loadingSection.classList.remove('show');
+                updateStatus('❌ Erro na inicialização', false);
+            }
+        });
+
+        elements.stopBtn.addEventListener('click', async () => {
+            updateStatus('Desconectando sistema...', false);
+            addLog('⏹️ Parando sistema de reações...', 'warning');
+            
+            try {
+                const result = await window.electronAPI.stopBot();
+                if (result.success) {
+                    updateStatus('Sistema desconectado', false);
+                    addLog('✅ Sistema parado com sucesso', 'success');
+                    elements.qrSection.classList.remove('show');
+                    elements.loadingSection.classList.remove('show');
+                }
+            } catch (error) {
+                addLog(`Erro ao parar sistema: ${error.message}`, 'error');
+            }
+        });
+
+        // WhatsApp Events
+        window.electronAPI.onLoadingProgress((event, data) => {
+            addLog(`⏳ Carregando WhatsApp Web: ${data.message} (${data.percent}%)`, 'info');
+        });
+
+        window.electronAPI.onQrCode((event, qrData) => {
+            elements.loadingSection.classList.remove('show');
+            elements.qrSection.classList.add('show');
+            
+            if (qrData.startsWith('data:image/')) {
+                elements.qrImage.src = qrData;
+                elements.qrImage.style.display = 'block';
+                elements.qrText.style.display = 'none';
+                addLog('📱 QR Code visual gerado. Escaneie com seu WhatsApp', 'success');
+            } else {
+                elements.qrText.textContent = qrData;
+                elements.qrText.style.display = 'block';
+                elements.qrImage.style.display = 'none';
+                addLog('📱 QR Code texto gerado. Escaneie com seu WhatsApp', 'warning');
+            }
+            
+            updateStatus('🔄 Aguardando autenticação QR Code', false);
+        });
+
+        window.electronAPI.onQrError && window.electronAPI.onQrError((event, error) => {
+            addLog(`❌ Erro na geração do QR Code: ${error}`, 'error');
+        });
+
+        window.electronAPI.onBotReady((event) => {
+            elements.qrSection.classList.remove('show');
+            elements.loadingSection.classList.remove('show');
+            updateStatus('✅ Sistema Online e Operacional', true);
+            addLog('🎉 Bot conectado e monitorando grupos! Sistema TURBO ativado', 'success');
+        });
+
+        window.electronAPI.onBotAuthenticated((event) => {
+            addLog('🔐 WhatsApp autenticado com sucesso', 'success');
+        });
+
+        window.electronAPI.onAuthFailure((event, msg) => {
+            updateStatus('❌ Falha na autenticação', false);
+            addLog(`🔐 Falha na autenticação: ${msg}`, 'error');
+            elements.loadingSection.classList.remove('show');
+        });
+
+        window.electronAPI.onBotDisconnected((event, reason) => {
+            updateStatus('⚠️ Sistema desconectado', false);
+            addLog(`🔌 Conexão perdida: ${reason}`, 'warning');
+            elements.qrSection.classList.remove('show');
+            elements.loadingSection.classList.remove('show');
+            
+            if (reason === 'LOGOUT') {
+                addLog('🔄 Tentativa de reconexão automática iniciada...', 'info');
+            }
+        });
+
+        window.electronAPI.onReactionSent((event, data) => {
+            addLog(`⚡ Reação enviada → "${data.groupName}" às ${data.timestamp}`, 'success');
+        });
+
+        window.electronAPI.onReactionError((event, data) => {
+            addLog(`⚠️ Falha na reação: ${data.error}`, 'warning');
+        });
+
+        window.electronAPI.onRateLimitReached((event) => {
+            addLog('🚨 Limite de reações por minuto atingido - Aguardando...', 'warning');
+        });
+
+        window.electronAPI.onRetryFailed((event, error) => {
+            addLog(`💥 Falha crítica na tentativa de retry: ${error}`, 'error');
+        });
+
+        // Update stats every 3 seconds
+        setInterval(updateStats, 3000);
+
+        // Smooth animations on page load
+        window.addEventListener('load', () => {
+            document.body.style.opacity = '0';
+            setTimeout(() => {
+                document.body.style.transition = 'opacity 0.5s ease-in-out';
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+
+        // Initial log
+        addLog('🌟 Interface carregada com sucesso. Sistema pronto para uso!', 'success');
+    </script>
+</body>
+</html>

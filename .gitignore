@@ -1,0 +1,18 @@
+# Dependências
+node_modules/
+
+# Builds locais
+dist/
+out/
+build/
+
+# Electron
+*.asar
+*.exe
+*.dll
+*.dmg
+*.AppImage
+
+# Logs e temporários
+*.log
+.DS_Store

@@ -1,0 +1,92 @@
+{
+  "name": "whatsapp-auto-react-desktop",
+  "version": "1.0.0",
+  "description": "Aplicativo desktop para reações automáticas no WhatsApp",
+  "main": "main.js",
+  "homepage": "./",
+  "scripts": {
+    "start": "electron .",
+    "build-win": "electron-builder --win",
+    "build-mac": "electron-builder --mac",
+    "build-linux": "electron-builder --linux",
+    "build-all": "electron-builder --win --mac --linux",
+    "dist": "electron-builder",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "build": {
+    "appId": "com.diego.whatsappautoreact",
+    "productName": "WhatsApp Auto React",
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "package.json",
+      "main.js",
+      "preload.js",
+      "index.html",
+      "assets/**",
+      "node_modules/**"
+    ],
+    "asar": true,
+    "extraResources": [
+      {
+        "from": "resources/chrome/",
+        "to": "chrome/",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "assets/icon.icns"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "assets/icon.png"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Diego-Fagundes888",
+        "repo": "whatsapp-auto-react-desktop"
+      }
+    ]
+  },
+  "keywords": [
+    "whatsapp",
+    "automation",
+    "electron",
+    "desktop",
+    "react-bot"
+  ],
+  "author": "Diego Alves diego.fagundes0030@gmail.com",
+  "license": "MIT",
+  "dependencies": {
+    "puppeteer": "^24.17.1",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.33.1"
+  },
+  "devDependencies": {
+    "electron": "^25.9.8",
+    "electron-builder": "^24.13.3"
+  }
+}
