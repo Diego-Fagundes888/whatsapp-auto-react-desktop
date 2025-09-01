@@ -45,20 +45,32 @@
       "icon": "assets/icon.ico",
       "signAndEditExecutable": false,
       "sign": false,
+      "forceCodeSigning": false,
       "publisherName": "Diego Test Build",
-      "verifyUpdateCodeSignature": false
+      "verifyUpdateCodeSignature": false,
+      "certificateFile": null,
+      "certificatePassword": null,
+      "certificateSha1": null,
+      "certificateSubjectName": null,
+      "signingHashAlgorithms": null,
+      "rfc3161TimeStampServer": null,
+      "timeStampServer": null
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "signUninstaller": false,
+      "signDlls": false
     },
     "mac": {
       "target": [
         "dmg"
       ],
-      "icon": "assets/icon.icns"
+      "icon": "assets/icon.icns",
+      "identity": null,
+      "hardenedRuntime": false
     },
     "linux": {
       "target": [
