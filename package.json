@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "whatsapp-auto-react-desktop",
   "version": "1.0.0",
   "description": "Aplicativo desktop para reações automáticas no WhatsApp",
@@ -60,9 +60,7 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "signUninstaller": false,
-      "signDlls": false
+      "createStartMenuShortcut": true
     },
     "mac": {
       "target": [
