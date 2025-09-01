@@ -4,11 +4,12 @@ on:
   push:
     tags:
       - 'v*' # dispara quando criar tags tipo v1.0.0, v1.0.1 etc.
+  workflow_dispatch: # permite executar manualmente
 
 jobs:
   build-windows:
     runs-on: windows-latest
-
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -17,28 +18,66 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci --force
+        continue-on-error: true
+
+      - name: Install dependencies (fallback)
+        if: failure()
+        run: npm install --force
 
       - name: Build app (Windows)
         run: npm run dist
         env:
-          # Desabilita completamente a assinatura de código
+          GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
+          WIN_CSC_LINK: ""
+          WIN_CSC_KEY_PASSWORD: ""
+          PUBLISH_NEVER: false
 
-      - name: Upload artifacts to Release
+      - name: List dist contents
+        run: dir dist
+        shell: cmd
+
+      - name: Upload Windows artifacts to Release
         uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
             dist/*.exe
-            dist/*.zip
+            dist/*.exe.blockmap
             dist/*.msi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            dist/*.zip
+          token: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+          draft: false
+          prerelease: false
+          name: Release ${{ github.ref_name }}
+          body: |
+            ## WhatsApp Auto React Desktop - ${{ github.ref_name }}
+            
+            ### 📦 Downloads
+            - **Windows Installer:** WhatsApp Auto React Setup *.exe
+            
+            ### ✨ O que há de novo
+            - Build automático configurado
+            - Instalador NSIS funcional
+            - Suporte para Windows x64 e ia32
+
+      - name: Upload artifacts as workflow artifacts
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: windows-build-${{ github.run_number }}
+          path: |
+            dist/*.exe
+            dist/*.exe.blockmap
+          retention-days: 7
 
   build-mac:
     runs-on: macos-latest
+    if: false # Desabilitado temporariamente até configurar scripts Mac
     
     steps:
       - name: Checkout repository
@@ -48,27 +87,32 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci --force
 
       - name: Build app (macOS)
-        run: npm run build-mac
+        run: npm run dist:mac || npm run dist
         env:
-          # Desabilita assinatura no macOS também
+          GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
+          APPLE_ID: ""
+          APPLE_ID_PASSWORD: ""
 
-      - name: Upload artifacts to Release
+      - name: Upload Mac artifacts to Release
         uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
             dist/*.dmg
             dist/*.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            dist/*.pkg
+          token: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
 
   build-linux:
     runs-on: ubuntu-latest
+    if: false # Desabilitado temporariamente até configurar scripts Linux
     
     steps:
       - name: Checkout repository
@@ -78,19 +122,73 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: 'npm'
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm fakeroot dpkg
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci --force
 
       - name: Build app (Linux)
-        run: npm run build-linux
+        run: npm run dist:linux || npm run dist
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
 
-      - name: Upload artifacts to Release
+      - name: Upload Linux artifacts to Release
         uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
             dist/*.AppImage
             dist/*.deb
             dist/*.rpm
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            dist/*.snap
+          token: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+
+  create-release-notes:
+    needs: [build-windows]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+          git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Update Release Notes
+        uses: softprops/action-gh-release@v1
+        with:
+          token: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+          body: |
+            ## 📦 WhatsApp Auto React Desktop - ${{ github.ref_name }}
+            
+            ### ✨ Mudanças nesta versão:
+            ${{ steps.changelog.outputs.CHANGELOG }}
+            
+            ### 💾 Downloads disponíveis:
+            - **Windows:** WhatsApp Auto React Setup.exe (x64/ia32)
+            
+            ### 📋 Requisitos:
+            - Windows 10 ou superior
+            - 4GB RAM mínimo
+            - 200MB espaço em disco
+            
+            ### 🚀 Como instalar:
+            1. Baixe o instalador para seu sistema
+            2. Execute o arquivo .exe
+            3. Siga as instruções do instalador
+            
+            ---
+            *Criado automaticamente via GitHub Actions*
