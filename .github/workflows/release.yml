@@ -1,0 +1,57 @@
+name: Build & Release (Windows)
+
+on:
+  push:
+    tags:
+      - 'v*'   # dispara quando você criar uma tag do tipo v1.0.0
+
+jobs:
+  build_windows:
+    runs-on: windows-latest
+
+    steps:
+      # 1. Baixar o código
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 2. Configurar Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # 3. Instalar dependências
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. Build do app com electron-builder
+      - name: Build app
+        run: npm run dist
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK || '' }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD || '' }}
+
+      # 5. Criar release no GitHub
+      - name: Create Release
+        id: create_release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          body: |
+            🚀 Release gerada automaticamente pelo GitHub Actions
+            - Commit: ${{ github.sha }}
+            - Runner: windows-latest
+
+      # 6. Fazer upload dos builds (exe/zip)
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/**/*.exe
+            dist/**/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
