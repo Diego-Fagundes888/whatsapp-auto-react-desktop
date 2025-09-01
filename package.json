@@ -52,8 +52,7 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "signing": false
+      "createStartMenuShortcut": true
     },
     "mac": {
       "target": [
